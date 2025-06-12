@@ -287,10 +287,35 @@ class SQLiteAndroidDatabase {
                 int size = queryParams.size();
                 params = new String[size];
                 for (int j = 0; j < size; j++) {
-                    if (queryParams.isNull(j))
-                        params[j] = "";
-                    else
-                        params[j] = queryParams.getString(j);
+                    if (queryParams.isNull(j)) {
+                        params[j] = ""; // Or null, depending on how you want to represent SQL NULLs
+                        // For rawQuery, an empty string is often treated as such
+                        // Or you might use `null` Java String reference if your SQL expects it
+                        // But "" is generally safer for rawQuery parameters.
+                    } else {
+                        ReadableType type = queryParams.getType(j);
+                        switch (type) {
+                            case Boolean:
+                                params[j] = String.valueOf(queryParams.getBoolean(j));
+                                break;
+                            case Number:
+                                // getDouble() handles both integer and double types gracefully
+                                params[j] = String.valueOf(queryParams.getDouble(j));
+                                break;
+                            case String:
+                                params[j] = queryParams.getString(j);
+                                break;
+                            case Map:
+                            case Array:
+                                // These types are generally not supported as direct SQL parameters
+                                // without custom serialization (e.g., converting to JSON string).
+                                // You might want to throw an error or implement serialization here.
+                                throw new IllegalArgumentException("Unsupported data type for SQL parameter: " + type.name());
+                            default:
+                                // Should not happen for standard ReadableType, but good practice
+                                throw new IllegalArgumentException("Unknown data type for SQL parameter: " + type.name());
+                        }
+                    }
                 }
             }
             cur = mydb.rawQuery(query, params);

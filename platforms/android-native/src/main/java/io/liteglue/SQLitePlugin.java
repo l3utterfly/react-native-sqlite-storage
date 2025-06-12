@@ -762,7 +762,7 @@ public class SQLitePlugin extends ReactContextBaseJavaModule {
                 FLog.e(TAG,"Error retrieving assetFilename or mode from options:",ex);
             }
             this.openFlags = openFlags;
-            this.oldImpl = SQLitePluginConverter.getBoolean(options,"androidOldDatabaseImplementation",false);
+            this.oldImpl = SQLitePluginConverter.getBoolean(options,"androidOldDatabaseImplementation",Build.VERSION.SDK_INT >= Build.VERSION_CODES.R);
             FLog.v(TAG, "Android db implementation: " + (oldImpl ? "OLD" : "sqlite4java (NDK)"));
             this.androidLockWorkaround = this.oldImpl && SQLitePluginConverter.getBoolean(options,"androidLockWorkaround",false);
             if (this.androidLockWorkaround)
